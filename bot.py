@@ -1,52 +1,63 @@
-import os
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+import logging
+import asyncio
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, Update
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackContext
+from os import getenv
 from dotenv import load_dotenv
 
+# Load environment variables from .env file
 load_dotenv()
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+BOT_TOKEN = getenv("BOT_TOKEN")
 
 if not BOT_TOKEN:
     raise Exception("❌ BOT_TOKEN not set. Please check your .env file.")
 
-# Define buttons and links
-channel_links = [
-    "https://t.me/channel1",
-    "https://t.me/channel2",
-    "https://t.me/channel3",
-    "https://t.me/channel4",
-    "https://t.me/channel5",
-    "https://t.me/channel6",
-]
-claim_link = "https://t.me/claim_now"
+# Set up logging
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
-# Create the inline keyboard layout
-keyboard = [
-    [InlineKeyboardButton("Join Now", url=link)] for link in channel_links
-]
-keyboard.append([InlineKeyboardButton("🎁 Claim Now", url=claim_link)])
-reply_markup = InlineKeyboardMarkup(keyboard)
+# Handler for /start command
+async def start(update: Update, context: CallbackContext.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
 
-# /start command handler
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    with open("promo.jpg", "rb") as image_file:
-        await context.bot.send_photo(
-            chat_id=update.effective_chat.id,
-            photo=image_file,
-            caption="🚀 Join All Channels Below & Claim Your Reward 🎁",
-            reply_markup=reply_markup
-        )
+    # Image path (make sure 'promo.jpg' is in the same folder)
+    image_path = "promo.jpg"
 
-# Run the bot
+    # Caption
+    caption = (
+        "🔥 Join the best Telegram channels and claim your reward now!\n\n"
+        "👇 Click the buttons below 👇"
+    )
+
+    # Inline buttons
+    buttons = [
+        [InlineKeyboardButton("Join Now 1", url="https://t.me/channel1")],
+        [InlineKeyboardButton("Join Now 2", url="https://t.me/channel2")],
+        [InlineKeyboardButton("Join Now 3", url="https://t.me/channel3")],
+        [InlineKeyboardButton("Join Now 4", url="https://t.me/channel4")],
+        [InlineKeyboardButton("Join Now 5", url="https://t.me/channel5")],
+        [InlineKeyboardButton("Join Now 6", url="https://t.me/channel6")],
+        [InlineKeyboardButton("✅ Claim Now", url="https://t.me/claimbot")],
+    ]
+
+    reply_markup = InlineKeyboardMarkup(buttons)
+
+    # Send image with buttons
+    with open(image_path, "rb") as photo:
+        await context.bot.send_photo(chat_id=chat_id, photo=photo, caption=caption, reply_markup=reply_markup)
+
+# Main function to start the bot
 async def main():
-    app = Application.builder().token(BOT_TOKEN).build()
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
-    print("🤖 Bot is running...")
+
+    print("✅ Bot started successfully.")
     await app.run_polling()
 
-if __name__ == "__main__":
-    import asyncio
-
+# Safe asyncio launch (Render compatible)
 if __name__ == "__main__":
     try:
         asyncio.run(main())
@@ -57,4 +68,5 @@ if __name__ == "__main__":
             loop.run_forever()
         else:
             raise
+
 
